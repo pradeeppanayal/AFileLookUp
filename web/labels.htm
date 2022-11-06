@@ -17,7 +17,6 @@
 
     <div class="container" id="app" style="display: None ;">
             <h2 onclick="history.back();"><span><i  style="cursor:pointer;" title="Home" class="material-icons">home</i></span>Manage Labels</h2>
-            <div id="nodata" style="display: none;">Nothing to show <a href="index">Go back</a></div>
             <div v-if="loading">Loading....</div> 
             <form v-if="fileinfo">
                 <ul class="list-group" style="opacity:90%;">
@@ -33,7 +32,7 @@
                                 <input type="text" class="form-control" v-model="nlabelname" placeholder="Enter new label and press enter" />
                             </div>
                             <div class="col">
-                                <input type="submit" class="btn btn-success" @click="addlabel" value="Add" id="addlabel" />
+                                <input type="submit" class="btn btn-success" @click="addlabel" value="Add" />
                             </div>
                         </div>
                     </li>
