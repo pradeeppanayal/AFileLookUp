@@ -11,7 +11,7 @@ logging.basicConfig(filename='Watcher.log', filemode='w', format='%(name)s - %(l
 DOWNLOAD_DIR ="C:\\Users\\prade\\Downloads"
 REPO_DIR = os.path.abspath("repo")
 ZIP_DIR = os.path.abspath("zip")
-
+MAX_FOLDER_NAME_SIZE = 50
 INTERVAL = 5
 api_url = 'http://localhost:8080/api/fileinfo'
 
@@ -33,7 +33,8 @@ def _checkForZipFile():
       try:
          filenameWithoutExt = filename[:-4];
          sourceFile = os.path.join(DOWNLOAD_DIR,filename)
-         targetDir = os.path.join(REPO_DIR, filenameWithoutExt)
+         targetFolderName = filenameWithoutExt[:MAX_FOLDER_NAME_SIZE]
+         targetDir = os.path.join(REPO_DIR, targetFolderName)
          #os.mkdir(targetDir)
 
          logging.info(f"Extracting file {filename} to location {targetDir}")
@@ -49,7 +50,7 @@ def _checkForZipFile():
             vectorfile = vectorfiles[i]
 
             data =  {
-               'category': filenameWithoutExt,
+               'category': filenameWithoutExt[:50],
                'imageFile': imagefile,
                'vectorFile': vectorfile
             }
