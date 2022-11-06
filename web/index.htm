@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Ashu's Vectors</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  
+  <!-- Doc: https://getbootstrap.com/docs/4.3/components/buttons/-->
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-9" style="padding-left: 40px; ;padding-top: 15px ; padding-right: 20px ;">
+            <h2>Search</h2>
+            <hr />
+            <form>
+                <div class="row">
+                    <div class="col-10">
+                        <input type="text" maxlength="20" class="form-control" id="SearchBox" placeholder="Enter filename to search" name="email">
+                    </div> 
+                    <div class="col-2">
+                        <button type="button" id="clearSearch" class="btn btn-secondary">Clear</button>
+                        <button type="submit" id="search" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+            </form>
+            <div id="grid" style="padding-top:20px;">
+            </div>    
+        </div>
+        <div class="col-3" style="border-left:1px solid #f0f0f0;height:500px; padding: 10px; position: sticky">
+            <h3>Recently Added</h3>
+            <div id="added">
+                <i>Recently added items will be shown here..</i>               
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    
+    function getSearchParams(k){
+        var p={};
+        location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi,function(s,k,v){p[k]=v})
+        return k?p[k]:p;
+    }
+    var items = []
+    $(document).ready(function(){ 
+        _render_recent = function(items){
+            html = ""
+            if(! items || items.length==0 ){
+                $('#added').html('<i>Recently added items will be shown here..</i>');
+                return;
+            }
+            for(var i=0;i< items.length;i++){
+                item = items[i];
+                html +='<a href="index?id='+item.id+'">'
+                html +=  '<div class="card mb-3" onclick="">'
+                html +=  '        <div class="row no-gutters">'
+                html +=  '              <div class="col-md-4">'
+                html +=  '                  <img style="width:100%; height:100%" src="/api/'+item.category+'/'+item.imageFile+'" class="card-img" alt="...">'
+                html +=  '              </div>'
+                html +=  '              <div class="col-md-8">'
+                html +=  '                  <div class="card-body">'
+                html +=  '                      <h6 class="card-title">'+item.category+'</h6>'
+                html +=  '                  </div>'
+                html +=  '              </div>'
+                html +=  '      </div>'
+                html +=  '</div>'
+                html +='</a>'
+            }
+            $('#added').html(html);
+        };
+        renderItems =function(items){
+            if(!items || items.length==0){
+                _renderBody('<i> :( could not find anything....</i>')
+                return;
+            }
+            var html = '<div class="card-columns">';
+            items.forEach(element => {
+                html +=_prepareResult(element);
+            }); 
+            html +='<div>';
+            _renderBody(html)
+
+        };
+        _prepareResult= function(item){    
+            var imgFile='';   
+            var vectorFile = item.vectorFile;  
+            vectorSrc = "";
+            imgSrc ='/api/'+item.category+ '/' + item.imageFile;
+
+            html = '<div class="card" style="width: 18rem;">'
+            onclickAct =' openInAppTrigger(\''+item.category+'\',\''+ item.imageFile+"\')";
+            html += '<img title="View the full size image" src="'+imgSrc+'" class="card-img-top" style="cursor:pointer;" onclick="'+onclickAct+'"alt="No photo">'
+            html += '<div class="card-body">';
+            html += '<h5 class="card-title">'+item.category+'<a href="labels?fileid='+item.id+'"><img style="width:25px; float:right; cursor:pointer;" title="Edit labels" src="/web/asset/img/label.png" alt="Manage labels" /></a></h5>';
+            html += '<p class="card-text"></p>';
+            if(vectorFile){
+                onclickAct =' openInAppTrigger(\''+item.category+'\',\''+ vectorFile+"\')";
+                html += '<input title="Click to edit the vector file" onclick ="'+onclickAct+'"type="button" href="'+vectorSrc+'" class="btn btn-primary btn-lg btn-block" value="Edit" />';
+            }else{
+                html +='<p>No vector file available</p>'
+            }
+            html += '</div>';
+            html += '</div>';
+            return html;
+        }
+
+        openInAppTrigger= function(category, filename){
+            api  = '/api/'+category+'/'+ filename+"/openinapp"
+            $.ajax({
+               url:api,
+               method:'GET',
+               success:function(e){
+                console.log("triggerd file open "+ filename+" of the category "+ category)
+               },
+               error:function(e){
+                showError("Could not triggerd file open "+ filename+" of the category "+ category)
+               }
+            });
+        }
+        showLoading = function(){
+            _renderBody('<i>Loading....</i>');
+        }
+        showError = function(msg){
+            _renderBody('<i style="color:red;">'+msg+'</i>')
+        }
+        _renderBody = function(html){
+            $('#grid').html(html)
+        }
+
+        $('#search').click(function(e){
+            if(e) e.preventDefault();
+            performSearch()
+        });
+        $('#clearSearch').click(function(e){
+            if(e) e.preventDefault();
+            $('#SearchBox').val("")
+        });
+        performSearch = function() {
+            items = []
+            var searchword = $('#SearchBox').val();
+            if(!searchword){
+                showError("Provide something to search");
+                return;
+            }  
+            showLoading();
+            var searchAPI = '/api/search';
+
+            $.ajax({
+                method:'POST',
+                url:searchAPI,
+                contentType:'application/json',
+                data:JSON.stringify({
+                    searchKeyWord: searchword
+                }),
+                success:function(res){
+                    var jres = res ?  res['data'] :[]
+                    var result = !jres?[]: Array.isArray(jres) ? jres : [jres];
+                    renderItems( result)
+                },
+                error:function(ex){
+                    showError("Something went wrong.");
+                },
+                complete:function(){
+
+                }
+            });
+        }
+        loadRecent = function(){
+            $.ajax({
+                method:'GET',
+                url:'/api/recent',
+                success:function(res){
+                    var jres = res ?  res['data'] :[]
+                    var result = !jres?[]: Array.isArray(jres) ? jres : [jres];
+                    _render_recent( result)
+                },
+                error:function(ex){
+                    //showError("Something went wrong.");
+                },
+                complete:function(){
+
+                }
+            });
+        }
+        loadById = function(passedFileId){
+            $('#loading').css('display','block');
+            $.ajax({
+                url:"/api/fileinfo/"+passedFileId,
+                success:function(e){
+                    var item = e.data
+                    if(!item){
+                        _renderBody("<i>Item not found.</i>")
+                        return
+                    }
+                    citem = item
+                    $('#SearchBox').val(citem.category);
+                    renderItems( [item])
+                    //$('body').css('background-image','url(/api/'+citem.category+'/'+citem.imageFile+')');
+                    //renderlabels();
+                },
+                complete:function(){
+                        $('#loading').css('display','none');
+                }
+            });
+        }
+        //on load actions
+        var searchKeyword = getSearchParams('search')
+        if(searchKeyword){
+            $('#SearchBox').val(searchKeyword);
+            performSearch();
+            //$('#search').click();
+        }
+        var id= getSearchParams('id');
+        if(id){
+            loadById(id);
+        }
+        loadRecent();
+        setInterval(function() {
+            loadRecent();
+        }, 5000);
+    });// end of doc ready
+</script>
+</body>
+</html>

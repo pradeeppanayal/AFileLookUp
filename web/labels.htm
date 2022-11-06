@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Ashu's Labels</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <!-- Doc: https://getbootstrap.com/docs/4.3/components/buttons/-->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+ 
+</head>
+<body style="background-size: cover;">
+
+    <div class="container">
+            <h2><span id="home"><i  style="cursor:pointer;" title="Home" class="material-icons">home</i></span>Manage Labels</h2>
+            <div id="nodata" style="display: none;">Nothing to show <a href="index">Go back</a></div>
+            <div id="loading" style="display: none;">Loading....</div> 
+            <form>
+                <ul class="list-group" style="opacity:90%;">
+                    <span id="labels">
+                        <!-- <li class="list-group-item disabled" aria-disabled="true">Cras justo odio</li> -->
+                        <!-- <li class="list-group-item">Dapibus ac facilisis in</li> -->
+                    </span>
+
+                    <li class="list-group-item">
+                        <div class="form-row">
+                            <div class="col">
+                                <input type="text" class="form-control" id="label" placeholder="Enter new label and press enter" />
+                            </div>
+                            <div class="col">
+                                <input type="submit" class="btn btn-success" value="Add" id="addlabel" />
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </form>
+    </div>
+</body>
+<script>
+function getSearchParams(k){
+    var p={};
+    location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi,function(s,k,v){p[k]=v})
+    return k?p[k]:p;
+}
+$(document).ready(function(){ 
+  
+    renderlabels = function(){
+        //console.log("called", citem, citem.labels)
+        html = ""
+        if(citem && citem.labels){
+            for(var i=0;i< citem.labels.length;i++){
+                var label =  citem.labels[i];
+                if(label.text == citem.category)
+                    html +='<li class="list-group-item" aria-disabled="true">'+label.text+'</li> '
+                else{
+                    html +='<li class="list-group-item d-flex justify-content-between align-items-center">'+label.text
+                    html +='<i  style="cursor:pointer;" onclick="deleteLabel('+label.id+')" title="Delete" class="material-icons">delete</i>'
+                    html += '</li> '
+                }
+            }
+        }
+        $('#labels').html(html);
+    }
+    deleteLabel = function(id){
+        if(!id) return;
+        $('#loading').css('display','block');
+
+        $.ajax({
+            url:'/api/fileinfo/'+passedFileId+'/labels/'+id,
+            contentType:'application/json',
+            method:'DELETE',
+            data:JSON.stringify({}),
+            complete:function(){
+
+            },
+            success:function(){
+                loadLabels();
+            }
+        });
+    }
+    loadLabels = function(){
+        $('#loading').css('display','block');
+        $.ajax({
+            url:"/api/fileinfo/"+passedFileId,
+            success:function(e){
+                var item = e.data
+                if(!item){
+                    $('#nodata').css('display','block');
+                    return;
+                }
+                citem = item
+                $('body').css('background-image','url(/api/'+citem.category+'/'+citem.imageFile+')');
+                renderlabels();
+            },
+            complete:function(){
+                    $('#loading').css('display','none');
+            }
+        });
+    }
+
+    $('#home').click(function(){        
+        window.location.href= 'index?search='+(citem.category?citem.category:"");
+    });
+
+    $('#addlabel').click(function(e){
+        if(e) e.preventDefault();
+        var label =  $('#label').val();
+        if(!label){
+            return;
+        }
+        $('#label').val('')
+        $.ajax({
+            url:"/api/fileinfo/"+passedFileId+"/labels",
+            method:'POST',
+            data:JSON.stringify({'label':label}),
+            contentType:'application/json',
+            success:function(e){
+                loadLabels();
+            },
+            error:function(){
+                //$('#loading').css('display','none');
+            },
+        })
+    });
+    var passedFileId = getSearchParams('fileid')
+    var citem = {}
+    if(!passedFileId){
+        $('#nodata').css('display','block');
+    }else{
+    
+    loadLabels();
+    }
+
+});
+
+</script>
+</html>
