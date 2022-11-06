@@ -11,7 +11,7 @@ logging.basicConfig(filename='Watcher.log', filemode='w', format='%(name)s - %(l
 DOWNLOAD_DIR ="C:\\Users\\prade\\Downloads"
 REPO_DIR = os.path.abspath("repo")
 ZIP_DIR = os.path.abspath("zip")
-MAX_FOLDER_NAME_SIZE = 50
+MAX_LENGTH = 50
 INTERVAL = 5
 api_url = 'http://localhost:8080/api/fileinfo'
 
@@ -32,8 +32,9 @@ def _checkForZipFile():
          continue
       try:
          filenameWithoutExt = filename[:-4];
+
          sourceFile = os.path.join(DOWNLOAD_DIR,filename)
-         targetFolderName = filenameWithoutExt[:MAX_FOLDER_NAME_SIZE]
+         targetFolderName = filenameWithoutExt[:MAX_LENGTH]
          targetDir = os.path.join(REPO_DIR, targetFolderName)
          #os.mkdir(targetDir)
 
@@ -50,7 +51,7 @@ def _checkForZipFile():
             vectorfile = vectorfiles[i]
 
             data =  {
-               'category': filenameWithoutExt[:50],
+               'category': filenameWithoutExt[:MAX_LENGTH],
                'imageFile': imagefile,
                'vectorFile': vectorfile
             }
@@ -62,7 +63,7 @@ def _checkForZipFile():
                resp = response.read().decode("utf-8")
                logging.info(f'Registerd file  with request {data} and response {resp}')
          logging.info(f"Archiving file {filename} to location {ZIP_DIR}")
-         shutil.move(sourceFile, os.path.join(ZIP_DIR,filename))
+         shutil.move(sourceFile, os.path.join(ZIP_DIR,filename[:MAX_LENGTH]+".zip"))
       except Exception as ex:
          ignoreList.append(filename)
          logging.error(f"Could not process the file {filename} cause {ex}")
