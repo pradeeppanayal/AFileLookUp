@@ -5,23 +5,20 @@ import zipfile
 import time
 from urllib import request, parse
 import logging
-import logging
 
 logging.basicConfig(filename='Watcher.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level= logging.DEBUG) 
 
-DOWNLOAD_DIR ="C:\\Users\\Pradeep\\Downloads"
+DOWNLOAD_DIR ="C:\\Users\\prade\\Downloads"
 REPO_DIR = os.path.abspath("repo")
 ZIP_DIR = os.path.abspath("zip")
 
 INTERVAL = 5
 api_url = 'http://localhost:8080/api/fileinfo'
 
-skippedFiles = []
+ignoreList = []
 def _checkForZipFile():
 
    for filename in os.listdir(DOWNLOAD_DIR):
-      if filename in skippedFiles:
-         continue
       #print(f"processing filename {filename}")
       f = os.path.join(DOWNLOAD_DIR, filename)
       # checking if it is a file
@@ -30,6 +27,8 @@ def _checkForZipFile():
       if( ".zip" not in filename ):
          continue
       if filename[len(filename)-4:] != ".zip":
+         continue
+      if filename in ignoreList:
          continue
       try:
          filenameWithoutExt = filename[:-4];
@@ -40,41 +39,45 @@ def _checkForZipFile():
          logging.info(f"Extracting file {filename} to location {targetDir}")
          with zipfile.ZipFile(sourceFile, 'r') as ref:
             ref.extractall(targetDir)
-         imagefile, vectorfile = _getFileDetails(targetDir)
-         if (not imagefile or not vectorfile):
-            logging.error("Could not find the image/vector file(s)")
-            skippedFiles.append(filename)
+         imagefiles, vectorfiles = _getFileDetails(targetDir)
+         if (not imagefiles or not vectorfiles or len(imagefiles) == 0 or len(vectorfiles) == 0 ):
+            logging.error("Could not find any image/vector file(s)")
             continue
-         data =  {
-            'category': filenameWithoutExt,
-            'imageFile': imagefile,
-            'vectorFile': vectorfile
-         }
-         jsondataasbytes = json.dumps(data).encode('utf-8')
-         req = request.Request(api_url, data = jsondataasbytes ,method='POST')
-         req.add_header('Content-Type', 'application/json; charset=utf-8')
-         req.add_header('Content-Length', len(jsondataasbytes))
-         with request.urlopen(req) as response:
-            data = response.read().decode("utf-8")
-            logging.info(f'Registerd file  with {data}')
+         logging.info(f"Identified images: {len(imagefiles)} and vector files {len(vectorfiles)}")
+         for i in range(min(len(vectorfiles),len(imagefiles))):
+            imagefile = imagefiles[i]
+            vectorfile = vectorfiles[i]
+
+            data =  {
+               'category': filenameWithoutExt,
+               'imageFile': imagefile,
+               'vectorFile': vectorfile
+            }
+            jsondataasbytes = json.dumps(data).encode('utf-8')
+            req = request.Request(api_url, data = jsondataasbytes ,method='POST')
+            req.add_header('Content-Type', 'application/json; charset=utf-8')
+            req.add_header('Content-Length', len(jsondataasbytes))
+            with request.urlopen(req) as response:
+               resp = response.read().decode("utf-8")
+               logging.info(f'Registerd file  with request {data} and response {resp}')
          logging.info(f"Archiving file {filename} to location {ZIP_DIR}")
          shutil.move(sourceFile, os.path.join(ZIP_DIR,filename))
       except Exception as ex:
-         skippedFiles.append(filename)
+         ignoreList.append(filename)
          logging.error(f"Could not process the file {filename} cause {ex}")
 
 def _getFileDetails(path):
-   imageFile = None
-   vectorFile = None
+   imageFiles = []
+   vectorFiles = []
    for filename in os.listdir(path):
       if not os.path.isfile(os.path.join(path,filename)):
             continue
       extention = filename[len(filename)-4:] 
       if extention == '.eps':
-         vectorFile = filename;
+         vectorFiles.append(filename);
       if extention in ['.jpg', 'jpeg', '.png']:
-         imageFile = filename
-   return imageFile, vectorFile
+         imageFiles.append(filename)
+   return imageFiles, vectorFiles
 
 def main():
    loading = False
