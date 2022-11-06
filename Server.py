@@ -18,6 +18,10 @@ manager = FileLookUpManager()
 def send_report(filename):
     return send_from_directory('web', filename+".htm")
 
+@app.route('/js/<path:filename>')
+def sendJsFile(filename):
+    return send_from_directory('js', filename)
+
 @app.route('/web/asset/<path:ftype>/<path:filename>')
 def getAssets(ftype,filename):
     return send_from_directory(f'assets/{ftype}', filename)
