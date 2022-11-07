@@ -6,9 +6,9 @@ import time
 from urllib import request, parse
 import logging
 
-logging.basicConfig(filename='Watcher.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level= logging.DEBUG) 
+logging.basicConfig(filename='Watcher.log', filemode='a', format='%(name)s - %(levelname)s - %(message)s', level= logging.DEBUG) 
 
-DOWNLOAD_DIR ="C:\\Users\\prade\\Downloads"
+DOWNLOAD_DIR ="C:\\Users\\Pradeep\\Downloads"
 REPO_DIR = os.path.abspath("repo")
 ZIP_DIR = os.path.abspath("zip")
 MAX_LENGTH = 50
@@ -17,7 +17,6 @@ api_url = 'http://localhost:8080/api/fileinfo'
 
 ignoreList = []
 def _checkForZipFile():
-
    for filename in os.listdir(DOWNLOAD_DIR):
       #print(f"processing filename {filename}")
       f = os.path.join(DOWNLOAD_DIR, filename)
@@ -44,6 +43,8 @@ def _checkForZipFile():
          imagefiles, vectorfiles = _getFileDetails(targetDir)
          if (not imagefiles or not vectorfiles or len(imagefiles) == 0 or len(vectorfiles) == 0 ):
             logging.error("Could not find any image/vector file(s)")
+            shutil.rmtree(targetDir)
+            ignoreList.append(filename)
             continue
          logging.info(f"Identified images: {len(imagefiles)} and vector files {len(vectorfiles)}")
          for i in range(min(len(vectorfiles),len(imagefiles))):

@@ -5,7 +5,7 @@ const template = `<div class="card mb-3" @click="emitSelection" style="cursor:po
                             </div>              
                             <div class="col-md-8">                  
                                 <div class="card-body">                      
-                                    <h6 class="card-title">wild_animals</h6>
+                                    <h6 class="card-title">{{item.category}}</h6>
                                 </div>
                             </div>
                     </div>

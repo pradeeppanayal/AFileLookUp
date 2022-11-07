@@ -6,7 +6,7 @@ import logging
 from FileManager import FileLookUpManager
 from beans import FileInfo
 
-logging.basicConfig(filename='Server.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level= logging.DEBUG) 
+logging.basicConfig(filename='Server.log', filemode='a', format='%(name)s - %(levelname)s - %(message)s', level= logging.DEBUG) 
 
 
 app = Flask(__name__)

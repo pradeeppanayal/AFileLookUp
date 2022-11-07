@@ -45,8 +45,13 @@ class FileInfoDOA(CommonDAO):
     def _createNew(self, info:FileInfo):
         info.id = self.getNextFileId();
         info.createdOn = (datetime.utcnow()- datetime(1970,1,1)).total_seconds()
-        count = self._executeUpdate(f'''INSERT INTO FileInfo(ID,CATEGORY,IMAGE_FILE,VECTOR_FILE,CREATED_ON) 
-        VALUES({info.id},'{info.category}','{info.imageFile}','{info.vectorFile}',{info.createdOn});''');
+        logging.info(f'Creating file info {info}');
+        count = 0
+        try:
+            count = self._executeUpdate(f'''INSERT INTO FileInfo(ID,CATEGORY,IMAGE_FILE,VECTOR_FILE,CREATED_ON) 
+            VALUES({info.id},'{info.category}','{info.imageFile}','{info.vectorFile}',{info.createdOn});''');
+        except Exception as e:
+            logging.error(e)
         return count
 
     def _update(self, info:FileInfo):
@@ -58,7 +63,7 @@ class FileInfoDOA(CommonDAO):
             count = self._createNew(info)
         else:
             count = self._update(info)
-        if count ==0:
+        if count == 0:
             return 0    
         label = self.labelDAO.getLabelByName(info.category)
         if(not label):
